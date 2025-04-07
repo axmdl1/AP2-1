@@ -11,6 +11,7 @@ import (
 type ProductUsecase interface {
 	CreateProduct(ctx context.Context, product *entity.Product) error
 	ListProducts(ctx context.Context, skip, limit int64) ([]*entity.Product, error)
+	DeleteProduct(ctx context.Context, id string) error
 }
 
 type productUsecase struct {
@@ -46,4 +47,8 @@ func (u *productUsecase) ListProducts(ctx context.Context, skip, limit int64) ([
 		ptrProducts[i] = &products[i]
 	}
 	return ptrProducts, nil
+}
+
+func (u *productUsecase) DeleteProduct(ctx context.Context, id string) error {
+	return u.repo.Delete(ctx, id)
 }

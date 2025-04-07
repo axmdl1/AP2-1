@@ -10,14 +10,23 @@
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: #fff;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        h1 {
+        h1, h2 {
             text-align: center;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        form input, form button {
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 1em;
+            width: 100%;
         }
         table {
             width: 100%;
@@ -35,33 +44,67 @@
             background: #333;
             color: #fff;
         }
+        .action-buttons a, .action-buttons form {
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .action-buttons button {
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Our Store</h1>
+
+    <!-- Add New Product Form -->
+    <h2>Add New Product</h2>
+    <form action="/products/create" method="POST">
+        <input type="text" name="name" placeholder="Product Name" required>
+        <input type="text" name="category" placeholder="Category (e.g., iPhone, Mac)" required>
+        <input type="text" name="description" placeholder="Description" required>
+        <input type="number" step="0.01" name="price" placeholder="Price" required>
+        <input type="number" name="stock" placeholder="Stock" required>
+        <button type="submit">Add Product</button>
+    </form>
+
+    <!-- Products Table -->
+    <h2>Products</h2>
     <table>
         <thead>
         <tr>
+            <th>ID</th>
             <th>Name</th>
             <th>Category</th>
             <th>Description</th>
             <th>Price</th>
             <th>Stock</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
         {{range .products}}
         <tr>
+            <td>{{.ID.Hex}}</td>
             <td>{{.Name}}</td>
             <td>{{.Category}}</td>
             <td>{{.Description}}</td>
             <td>{{printf "$%.2f" .Price}}</td>
             <td>{{.Stock}}</td>
+            <td class="action-buttons">
+                <!-- Edit: Link to an edit page where you can update product info -->
+                <a href="/products/edit?id={{.ID}}" style="text-decoration: none;">Edit</a>
+                <!-- Delete: Form that posts to /products/delete -->
+                <form action="/products/delete" method="POST" style="display:inline;">
+                    <input type="hidden" name="id" value="{{.ID.Hex}}">
+                    <button type="submit" onclick="return confirm('Are you sure you want to delete this product?');">Delete</button>
+                </form>
+            </td>
         </tr>
         {{else}}
         <tr>
-            <td colspan="5" style="text-align:center;">No products available.</td>
+            <td colspan="6" style="text-align:center;">No products available.</td>
         </tr>
         {{end}}
         </tbody>

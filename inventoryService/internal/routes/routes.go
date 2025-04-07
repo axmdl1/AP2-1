@@ -9,7 +9,7 @@ func SetupRoutes(router *gin.Engine, ph *handler.ProductHandler) {
 	products := router.Group("/products")
 	{
 		products.GET("/store", ph.StorePage)
-		products.GET("/create", ph.CreateProduct)
 		products.POST("/create", ph.CreateProduct)
+		products.POST("/delete", ph.DeleteProduct)
 	}
 }

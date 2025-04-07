@@ -4,7 +4,9 @@ import (
 	"AP-1/inventoryService/internal/entity"
 	"AP-1/inventoryService/internal/usecase"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
+	"strings"
 )
 
 type ProductHandler struct {
@@ -29,12 +31,12 @@ func (h *ProductHandler) StorePage(c *gin.Context) {
 
 func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	if c.Request.Method == http.MethodGet {
-		c.HTML(http.StatusOK, "products.html", nil)
+		c.HTML(http.StatusOK, "store.html", nil)
 		return
 	}
 
 	var product entity.Product
-	if err := c.ShouldBindJSON(&product); err != nil {
+	if err := c.ShouldBind(&product); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -43,5 +45,27 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, product)
+	c.Redirect(http.StatusFound, "/products/store")
+}
+
+func (h *ProductHandler) DeleteProduct(c *gin.Context) {
+	id := c.PostForm("id")
+
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+	id = strings.TrimSpace(id)
+
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.usecase.DeleteProduct(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/products/store")
 }
