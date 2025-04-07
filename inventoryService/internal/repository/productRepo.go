@@ -83,5 +83,8 @@ func (r *productRepositoryMongo) List(ctx context.Context, filter bson.M, skip, 
 		}
 		products = append(products, product)
 	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
 	return products, nil
 }

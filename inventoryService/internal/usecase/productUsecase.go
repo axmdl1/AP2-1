@@ -5,17 +5,23 @@ import (
 	"AP-1/inventoryService/internal/repository"
 	"context"
 	"errors"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
-type ProductUsecase struct {
+type ProductUsecase interface {
+	CreateProduct(ctx context.Context, product *entity.Product) error
+	ListProducts(ctx context.Context, skip, limit int64) ([]*entity.Product, error)
+}
+
+type productUsecase struct {
 	repo repository.ProductRepository
 }
 
-func NewProductUsecase(repo repository.ProductRepository) *ProductUsecase {
-	return &ProductUsecase{repo: repo}
+func NewProductUsecase(repo repository.ProductRepository) ProductUsecase {
+	return &productUsecase{repo: repo}
 }
 
-func (u *ProductUsecase) CreateProduct(ctx context.Context, product *entity.Product) error {
+func (u productUsecase) CreateProduct(ctx context.Context, product *entity.Product) error {
 	if product.Price <= 0 {
 		return errors.New("price must be positive")
 	}
@@ -25,4 +31,19 @@ func (u *ProductUsecase) CreateProduct(ctx context.Context, product *entity.Prod
 	}
 
 	return u.repo.Create(ctx, product)
+}
+
+func (u *productUsecase) ListProducts(ctx context.Context, skip, limit int64) ([]*entity.Product, error) {
+	filter := bson.M{}
+	products, err := u.repo.List(ctx, filter, skip, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert []entity.Product to []*entity.Product
+	ptrProducts := make([]*entity.Product, len(products))
+	for i := range products {
+		ptrProducts[i] = &products[i]
+	}
+	return ptrProducts, nil
 }

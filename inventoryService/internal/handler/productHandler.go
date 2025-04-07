@@ -8,11 +8,23 @@ import (
 )
 
 type ProductHandler struct {
-	usecase *usecase.ProductUsecase
+	usecase usecase.ProductUsecase
 }
 
-func NewProductHandler(u *usecase.ProductUsecase) *ProductHandler {
+func NewProductHandler(u usecase.ProductUsecase) *ProductHandler {
 	return &ProductHandler{usecase: u}
+}
+
+func (h *ProductHandler) StorePage(c *gin.Context) {
+	products, err := h.usecase.ListProducts(c.Request.Context(), 0, 100)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not load products"})
+		return
+	}
+
+	c.HTML(http.StatusOK, "store.html", gin.H{
+		"products": products,
+	})
 }
 
 func (h *ProductHandler) CreateProduct(c *gin.Context) {
