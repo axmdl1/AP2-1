@@ -94,7 +94,7 @@
             <td>{{.Stock}}</td>
             <td class="action-buttons">
                 <!-- Edit: Link to an edit page where you can update product info -->
-                <a href="/products/edit?id={{.ID}}" style="text-decoration: none;">Edit</a>
+                <a href="/products/edit?id={{.ID.Hex}}" style="text-decoration: none;">Edit</a>
                 <!-- Delete: Form that posts to /products/delete -->
                 <form action="/products/delete" method="POST" style="display:inline;">
                     <input type="hidden" name="id" value="{{.ID.Hex}}">

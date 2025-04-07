@@ -10,6 +10,8 @@ import (
 
 type ProductUsecase interface {
 	CreateProduct(ctx context.Context, product *entity.Product) error
+	GetProductByID(ctx context.Context, id string) (*entity.Product, error)
+	UpdateProduct(ctx context.Context, product *entity.Product) error
 	ListProducts(ctx context.Context, skip, limit int64) ([]*entity.Product, error)
 	DeleteProduct(ctx context.Context, id string) error
 }
@@ -32,6 +34,14 @@ func (u productUsecase) CreateProduct(ctx context.Context, product *entity.Produ
 	}
 
 	return u.repo.Create(ctx, product)
+}
+
+func (u productUsecase) GetProductByID(ctx context.Context, id string) (*entity.Product, error) {
+	return u.repo.FindByID(ctx, id)
+}
+
+func (u productUsecase) UpdateProduct(ctx context.Context, product *entity.Product) error {
+	return u.repo.Update(ctx, product)
 }
 
 func (u *productUsecase) ListProducts(ctx context.Context, skip, limit int64) ([]*entity.Product, error) {
