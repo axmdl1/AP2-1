@@ -7,14 +7,9 @@ import (
 	"AP-1/inventoryService/internal/usecase"
 	"AP-1/inventoryService/pkg/mongo"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"log"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found. Using system environment variables.")
-	}
 	database := mongo.ConnectMongoDB("mongodb://localhost:27017/inventoryDB", "inventoryDB")
 
 	//init
@@ -25,6 +20,9 @@ func main() {
 	//router
 	router := gin.Default()
 	routes.SetupRoutes(router, productHandler)
+
+	router.LoadHTMLGlob("inventoryService/ui/*")
+	router.Static("/ui", "./ui")
 
 	router.Run(":1001")
 }

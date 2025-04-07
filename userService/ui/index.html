@@ -100,22 +100,37 @@
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
         e.preventDefault();
-        const email = document.getElementById("loginEmail").value;
+
+        const email = document.getElementById("loginEmail").value.trim();
         const password = document.getElementById("loginPassword").value.trim();
 
-        const res = await fetch(loginEndpoint, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ email, password })
-        });
+        try {
+            const response = await fetch("http://localhost:1004/users/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
 
-        const data = await res.json();
-        const msgElem = document.getElementById("loginMessage");
-        msgElem.className = data.error ? "error" : "message";
-        msgElem.innerText = data.message || data.error;
+            const data = await response.json();
+            const msgElem = document.getElementById("loginMessage");
+
+            if (!response.ok) {
+                msgElem.textContent = data.error || "Login failed";
+                msgElem.className = "message error";
+            } else {
+                msgElem.textContent = data.message || "Login successful";
+                msgElem.className = "message success";
+
+                // Redirect after a brief delay to let the user see the success message.
+                setTimeout(() => {
+                    window.location.href = "http://localhost:1001/products/store";
+                }, 1000);
+            }
+        } catch (error) {
+            console.error("Error during login:", error);
+        }
     });
+
 </script>
 </body>
 </html>

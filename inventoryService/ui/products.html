@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Products</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #333;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Our Products</h1>
+    <table id="productsTable">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Stock</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Product rows will be inserted here dynamically -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Adjust the endpoint if needed
+    const endpoint = "http://localhost:1001/products/store";
+
+    async function loadProducts() {
+        try {
+            const response = await fetch(endpoint);
+            const products = await response.json();
+            const tableBody = document.querySelector("#productsTable tbody");
+            tableBody.innerHTML = "";
+            products.forEach(product => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+            <td>${product.name}</td>
+            <td>${product.category}</td>
+            <td>${product.description}</td>
+            <td>$${product.price.toFixed(2)}</td>
+            <td>${product.stock}</td>
+          `;
+                tableBody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error("Error loading products:", error);
+        }
+    }
+
+    // Load products when the page loads
+    window.onload = loadProducts;
+</script>
+</body>
+</html>

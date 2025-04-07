@@ -55,6 +55,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "user logged in successfully", "user": user})
+	//c.Redirect(http.StatusSeeOther, "http://localhost:1001/products/store")
 }
 
 /*func (uh *UserHandler) GetRegister(c *gin.Context) {

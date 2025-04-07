@@ -6,5 +6,9 @@ import (
 )
 
 func SetupRoutes(router *gin.Engine, ph *handler.ProductHandler) {
-	router.POST("/products", ph.CreateProduct)
+	r := router.Group("/products")
+	{
+		r.GET("/store", ph.CreateProduct)
+		r.POST("/create", ph.CreateProduct)
+	}
 }
