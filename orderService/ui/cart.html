@@ -81,7 +81,7 @@
         </tbody>
     </table>
     <div id="total">Total: ${{printf "%.2f" .total}}</div>
-    <form action="/orders/cart/buy" method="post">
+    <form action="/orders/checkout" method="GET">
         <button type="submit">Buy Now</button>
     </form>
     {{else}}

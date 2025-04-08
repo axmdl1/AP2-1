@@ -25,8 +25,6 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	// Optionally, add server-side validation for order fields
-
 	if err := h.usecase.CreateOrder(c.Request.Context(), &order); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

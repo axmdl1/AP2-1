@@ -50,26 +50,39 @@ func (h *OrderHandler) ViewCart(c *gin.Context) {
 	})
 }
 
-// BuyCart handles POST /orders/cart/buy
-func (h *OrderHandler) BuyCart(c *gin.Context) {
-	if len(cartItems) == 0 {
-		c.HTML(http.StatusBadRequest, "cart.html", gin.H{
-			"error":     "Cart is empty",
-			"cartItems": cartItems,
-			"total":     0,
-		})
-		return
-	}
+func (h *OrderHandler) ShowPaymentPage(c *gin.Context) {
 	var total float64
 	for _, item := range cartItems {
 		total += item.Price * float64(item.Quantity)
 	}
+	c.HTML(http.StatusOK, "payment.html", gin.H{"total": total})
+}
 
+// ProcessPayment handles POST /orders/checkout
+func (h *OrderHandler) ProcessPayment(c *gin.Context) {
+	// Bind payment details from the form.
+	cardNumber := c.PostForm("card_number")
+	expiry := c.PostForm("expiry")
+	cvv := c.PostForm("cvv")
+	if cardNumber == "" || expiry == "" || cvv == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing payment details"})
+		return
+	}
+	// For demonstration, assume payment processing is successful.
+
+	var total float64
+	for _, item := range cartItems {
+		total += item.Price * float64(item.Quantity)
+	}
+	if len(cartItems) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cart is empty"})
+		return
+	}
 	order := entity.Order{
-		UserID:     "demo_user", // This can be dynamic in a real application.
+		UserID:     "demo_user", // In a real app, get this from user session/data.
 		Products:   cartItems,
 		TotalPrice: total,
-		Status:     "pending",
+		Status:     "completed",
 		CreatedAt:  time.Now(),
 	}
 
@@ -78,8 +91,10 @@ func (h *OrderHandler) BuyCart(c *gin.Context) {
 		return
 	}
 
-	// Clear the cart after placing the order.
+	// Clear the cart.
 	cartItems = nil
+
+	// Render a success page.
 	c.HTML(http.StatusOK, "buySuccess.html", gin.H{
 		"orderID":    order.ID.Hex(),
 		"totalPrice": order.TotalPrice,

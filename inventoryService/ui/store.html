@@ -117,7 +117,6 @@
     <h2 id="formTitle">Add New Product</h2>
     <form id="productForm" action="/products/create" method="post">
         <!-- Hidden field for product ID (empty when adding new product) -->
-        <input type="hidden" id="productId" name="id" value="">
         <input type="text" id="productName" name="name" placeholder="Product Name" required>
         <input type="text" id="productCategory" name="category" placeholder="Category (e.g., iPhone, Mac)" required>
         <textarea id="productDescription" name="description" placeholder="Description" required></textarea>

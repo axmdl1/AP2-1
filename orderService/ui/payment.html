@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment - Apple Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            margin-top: 20px;
+        }
+        form input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 1em;
+        }
+        form button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 1em;
+            background: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Enter Payment Details</h1>
+    <p>Total Amount: ${{printf "%.2f" .total}}</p>
+    <form action="/orders/checkout" method="POST">
+        <input type="text" name="card_number" placeholder="Card Number" required>
+        <input type="text" name="expiry" placeholder="Expiry Date (MM/YY)" required>
+        <input type="text" name="cvv" placeholder="CVV" required>
+        <button type="submit">Pay Now</button>
+    </form>
+    <a href="/orders/cart">Back to Cart</a>
+</div>
+</body>
+</html>
