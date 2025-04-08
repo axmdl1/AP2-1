@@ -13,6 +13,7 @@ type OrderUsecase interface {
 	GetOrderByID(ctx context.Context, id string) (*entity.Order, error)
 	ListOrders(ctx context.Context, skip, limit int64) ([]*entity.Order, error)
 	UpdateOrder(ctx context.Context, order *entity.Order) error
+	DeleteOrder(ctx context.Context, id string) error
 }
 
 type orderUsecase struct {
@@ -50,4 +51,8 @@ func (u *orderUsecase) ListOrders(ctx context.Context, skip, limit int64) ([]*en
 
 func (u *orderUsecase) UpdateOrder(ctx context.Context, order *entity.Order) error {
 	return u.repo.Update(ctx, order)
+}
+
+func (u *orderUsecase) DeleteOrder(ctx context.Context, id string) error {
+	return u.repo.Delete(ctx, id)
 }

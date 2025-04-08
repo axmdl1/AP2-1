@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Orders - Apple Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #333;
+            color: #fff;
+        }
+        .action-buttons a, .action-buttons form {
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .action-buttons button {
+            padding: 5px 10px;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        a.btn {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Orders History</h1>
+    <table>
+        <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>User ID</th>
+            <th>Status</th>
+            <th>Total Price</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .orders}}
+        <tr>
+            <td>{{.ID.Hex}}</td>
+            <td>{{.UserID}}</td>
+            <td>{{.Status}}</td>
+            <td>${{printf "%.2f" .TotalPrice}}</td>
+            <td>{{.CreatedAt}}</td>
+            <td class="action-buttons">
+                <a href="/orders/edit?id={{.ID.Hex}}">Edit</a>
+                <form action="/orders/delete" method="post" style="display:inline;">
+                    <input type="hidden" name="id" value="{{.ID.Hex}}">
+                    <button type="submit" onclick="return confirm('Are you sure you want to delete this order?');">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {{else}}
+        <tr>
+            <td colspan="6" style="text-align:center;">No orders found.</td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+    <a href="/products/store" class="btn">Back to Store</a>
+</div>
+</body>
+</html>

@@ -17,6 +17,7 @@ type OrderRepository interface {
 	FindByID(ctx context.Context, id string) (*entity.Order, error)
 	Update(ctx context.Context, order *entity.Order) error
 	List(ctx context.Context, filter bson.M, skip, limit int64) ([]entity.Order, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type orderRepositoryMongo struct {
@@ -78,4 +79,13 @@ func (r *orderRepositoryMongo) List(ctx context.Context, filter bson.M, skip, li
 		return nil, err
 	}
 	return orders, nil
+}
+
+func (r *orderRepositoryMongo) Delete(ctx context.Context, id string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objID})
+	return err
 }

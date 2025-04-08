@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Order - Apple Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        form label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        form input, form select, form button {
+            padding: 10px;
+            margin-top: 5px;
+            font-size: 1em;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        form button {
+            margin-top: 20px;
+            background: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        a {
+            display: block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Edit Order</h1>
+    <form action="/orders/edit" method="post">
+        <!-- Hidden field with the order ID -->
+        <input type="hidden" name="id" value="{{.order.ID.Hex}}">
+
+        <label for="status">Order Status:</label>
+        <select name="status" id="status" required>
+            <option value="pending" {{selected .order.Status "pending"}}>Pending</option>
+            <option value="completed" {{selected .order.Status "completed"}}>Completed</option>
+            <option value="cancelled" {{selected .order.Status "cancelled"}}>Cancelled</option>
+        </select>
+
+        <button type="submit">Update Order</button>
+    </form>
+    <a href="/orders">Back to Orders</a>
+</div>
+</body>
+</html>

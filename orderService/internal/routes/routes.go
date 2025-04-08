@@ -11,7 +11,9 @@ func SetupRoutes(router *gin.Engine, oh *handler.OrderHandler) {
 		orders.POST("/create", oh.CreateOrder)
 		orders.GET("/:id", oh.GetOrder)
 		orders.GET("", oh.ListOrders)
+		orders.GET("/edit", oh.GetEditOrderPage)
 		orders.POST("/edit", oh.UpdateOrder)
+		orders.POST("/delete", oh.DeleteOrder)
 
 		orders.POST("/cart/add", oh.AddToCart)
 		orders.GET("/cart", oh.ViewCart)
