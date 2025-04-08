@@ -3,6 +3,7 @@ package repository
 import (
 	"AP-1/orderService/internal/entity"
 	"context"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -29,7 +30,8 @@ func NewOrderRepository(db *mongo.Database) OrderRepository {
 }
 
 func (r *orderRepositoryMongo) Create(ctx context.Context, order *entity.Order) error {
-	order.CreatedAt = entity.Order{}.CreatedAt // alternatively, time.Now()
+	// Set CreatedAt to current time.
+	order.CreatedAt = time.Now()
 	res, err := r.collection.InsertOne(ctx, order)
 	if err != nil {
 		return err

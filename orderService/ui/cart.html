@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cart - Apple Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #333;
+            color: #fff;
+        }
+        #total {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: right;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        a {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Your Cart</h1>
+    {{if .cartItems}}
+    <table>
+        <thead>
+        <tr>
+            <th>Product ID</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .cartItems}}
+        <tr>
+            <td>{{.ProductID}}</td>
+            <td>${{printf "%.2f" .Price}}</td>
+            <td>{{.Quantity}}</td>
+            <td>${{printf "%.2f" (mul .Price .Quantity)}}</td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+    <div id="total">Total: ${{printf "%.2f" .total}}</div>
+    <form action="/orders/cart/buy" method="post">
+        <button type="submit">Buy Now</button>
+    </form>
+    {{else}}
+    <p>Your cart is empty.</p>
+    {{end}}
+    <a href="http://localhost:1001/products/store">Back to Store</a>
+</div>
+</body>
+</html>

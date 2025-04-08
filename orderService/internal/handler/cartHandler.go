@@ -40,13 +40,24 @@ func (h *OrderHandler) AddToCart(c *gin.Context) {
 
 // ViewCart handles GET /orders/cart
 func (h *OrderHandler) ViewCart(c *gin.Context) {
-	c.JSON(http.StatusOK, cartItems)
+	var total float64
+	for _, item := range cartItems {
+		total += item.Price * float64(item.Quantity)
+	}
+	c.HTML(http.StatusOK, "cart.html", gin.H{
+		"cartItems": cartItems,
+		"total":     total,
+	})
 }
 
 // BuyCart handles POST /orders/cart/buy
 func (h *OrderHandler) BuyCart(c *gin.Context) {
 	if len(cartItems) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "cart is empty"})
+		c.HTML(http.StatusBadRequest, "cart.html", gin.H{
+			"error":     "Cart is empty",
+			"cartItems": cartItems,
+			"total":     0,
+		})
 		return
 	}
 	var total float64
@@ -69,5 +80,8 @@ func (h *OrderHandler) BuyCart(c *gin.Context) {
 
 	// Clear the cart after placing the order.
 	cartItems = nil
-	c.JSON(http.StatusOK, gin.H{"message": "order placed", "order": order})
+	c.HTML(http.StatusOK, "buySuccess.html", gin.H{
+		"orderID":    order.ID.Hex(),
+		"totalPrice": order.TotalPrice,
+	})
 }
