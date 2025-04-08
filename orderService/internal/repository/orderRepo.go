@@ -55,7 +55,7 @@ func (r *orderRepositoryMongo) FindByID(ctx context.Context, id string) (*entity
 
 func (r *orderRepositoryMongo) Update(ctx context.Context, order *entity.Order) error {
 	filter := bson.M{"_id": order.ID}
-	update := bson.M{"$set": order}
+	update := bson.M{"$set": bson.M{"status": order.Status}}
 	_, err := r.collection.UpdateOne(ctx, filter, update)
 	return err
 }

@@ -3,11 +3,9 @@ package handler
 import (
 	"AP-1/orderService/internal/entity"
 	"AP-1/orderService/internal/usecase"
-	"log"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"net/http"
 )
 
 type OrderHandler struct {
@@ -44,33 +42,34 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, order)
 }
 
-// UpdateOrder handles POST /orders/edit
 func (h *OrderHandler) UpdateOrder(c *gin.Context) {
-	var order entity.Order
-	if err := c.ShouldBind(&order); err != nil {
+	var form struct {
+		ID     string `form:"id" binding:"required"`
+		Status string `form:"status" binding:"required"`
+	}
+
+	if err := c.ShouldBind(&form); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	idStr := c.PostForm("id")
-	log.Println("received id: ", idStr)
-	if idStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "order id is required"})
-		return
-	}
-	oid, err := primitive.ObjectIDFromHex(idStr)
+	oid, err := primitive.ObjectIDFromHex(form.ID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order id"})
 		return
 	}
-	order.ID = oid
+
+	order := entity.Order{
+		ID:     oid,
+		Status: form.Status,
+	}
 
 	if err := h.usecase.UpdateOrder(c.Request.Context(), &order); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "order updated"})
+	c.Redirect(http.StatusFound, "/orders")
 }
 
 // ListOrders handles GET /orders
