@@ -6,13 +6,15 @@ import (
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/google/uuid"
 )
 
 type ProductUsecase interface {
 	CreateProduct(ctx context.Context, product *entity.Product) error
 	GetProductByID(ctx context.Context, id string) (*entity.Product, error)
+	ListProducts(ctx context.Context, skip, limit int32) ([]entity.Product, error)
 	UpdateProduct(ctx context.Context, product *entity.Product) error
-	ListProducts(ctx context.Context, skip, limit int64) ([]*entity.Product, error)
 	DeleteProduct(ctx context.Context, id string) error
 }
 
@@ -24,39 +26,28 @@ func NewProductUsecase(repo repository.ProductRepository) ProductUsecase {
 	return &productUsecase{repo: repo}
 }
 
-func (u productUsecase) CreateProduct(ctx context.Context, product *entity.Product) error {
+func (u *productUsecase) CreateProduct(ctx context.Context, product *entity.Product) error {
 	if product.Price <= 0 {
 		return errors.New("price must be positive")
 	}
-
 	if product.Stock < 0 {
 		return errors.New("stock cannot be negative")
 	}
-
+	product.ID = uuid.New().String()
 	return u.repo.Create(ctx, product)
 }
 
-func (u productUsecase) GetProductByID(ctx context.Context, id string) (*entity.Product, error) {
+func (u *productUsecase) GetProductByID(ctx context.Context, id string) (*entity.Product, error) {
 	return u.repo.FindByID(ctx, id)
 }
 
-func (u productUsecase) UpdateProduct(ctx context.Context, product *entity.Product) error {
-	return u.repo.Update(ctx, product)
+func (u *productUsecase) ListProducts(ctx context.Context, skip, limit int32) ([]entity.Product, error) {
+	filter := bson.M{}
+	return u.repo.List(ctx, filter, skip, limit)
 }
 
-func (u *productUsecase) ListProducts(ctx context.Context, skip, limit int64) ([]*entity.Product, error) {
-	filter := bson.M{}
-	products, err := u.repo.List(ctx, filter, skip, limit)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert []entity.Product to []*entity.Product
-	ptrProducts := make([]*entity.Product, len(products))
-	for i := range products {
-		ptrProducts[i] = &products[i]
-	}
-	return ptrProducts, nil
+func (u *productUsecase) UpdateProduct(ctx context.Context, product *entity.Product) error {
+	return u.repo.Update(ctx, product)
 }
 
 func (u *productUsecase) DeleteProduct(ctx context.Context, id string) error {

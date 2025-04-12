@@ -1,134 +1,133 @@
 package handler
 
 import (
+	"context"
+	"log"
+
 	"AP-1/inventoryService/internal/entity"
 	"AP-1/inventoryService/internal/usecase"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"net/http"
-	"strings"
+	pb "AP-1/pb/inventoryService"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-type ProductHandler struct {
+type InventoryServiceServer struct {
+	pb.UnimplementedInventoryServiceServer
 	usecase usecase.ProductUsecase
 }
 
-func NewProductHandler(u usecase.ProductUsecase) *ProductHandler {
-	return &ProductHandler{usecase: u}
+func NewInventoryServiceServer(u usecase.ProductUsecase) *InventoryServiceServer {
+	return &InventoryServiceServer{usecase: u}
 }
 
-func (h *ProductHandler) StorePage(c *gin.Context) {
-	products, err := h.usecase.ListProducts(c.Request.Context(), 0, 100)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not load products"})
-		return
-	}
-
-	c.HTML(http.StatusOK, "store.html", gin.H{
-		"products": products,
-	})
-}
-
-func (h *ProductHandler) CreateProduct(c *gin.Context) {
-	if c.Request.Method == http.MethodGet {
-		c.HTML(http.StatusOK, "store.html", nil)
-		return
-	}
-
-	var product entity.Product
-	if err := c.ShouldBind(&product); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := h.usecase.CreateProduct(c.Request.Context(), &product); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.Redirect(http.StatusFound, "/products/store")
-}
-
-func (h *ProductHandler) GetEditPage(c *gin.Context) {
-	id := c.Query("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
-		return
-	}
-	product, err := h.usecase.GetProductByID(c.Request.Context(), id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
-		return
-	}
-	c.HTML(http.StatusOK, "edit.html", gin.H{"product": product})
-}
-
-type UpdateProductForm struct {
-	Name        string  `form:"name"`
-	Category    string  `form:"category"`
-	Description string  `form:"description"`
-	Price       float64 `form:"price"`
-	Stock       int     `form:"stock"`
-}
-
-func (h *ProductHandler) UpdateProduct(c *gin.Context) {
-	var form UpdateProductForm
-
-	// Bind form data (excluding the id field)
-	if err := c.ShouldBind(&form); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Retrieve the product ID from the form data as a single value.
-	idStr := c.PostForm("id")
-	if idStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "product id is required"})
-		return
-	}
-	idStr = strings.TrimSpace(idStr)
-
-	oid, err := primitive.ObjectIDFromHex(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product id"})
-		return
-	}
-
-	// Create the product from form data
+func (s *InventoryServiceServer) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductResponse, error) {
+	log.Printf("CreateProduct request: %+v", req)
 	product := entity.Product{
-		ID:          oid,
-		Name:        form.Name,
-		Category:    form.Category,
-		Description: form.Description,
-		Price:       form.Price,
-		Stock:       form.Stock,
+		Name:        req.Product.Name,
+		Category:    req.Product.Category,
+		Description: req.Product.Description,
+		Price:       req.Product.Price,
+		Stock:       int(req.Product.Stock),
 	}
 
-	if err := h.usecase.UpdateProduct(c.Request.Context(), &product); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	err := s.usecase.CreateProduct(ctx, &product)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	c.Redirect(http.StatusFound, "/products/store")
+	responseProduct := &pb.Product{
+		Id:          product.ID,
+		Name:        product.Name,
+		Category:    product.Category,
+		Description: product.Description,
+		Price:       product.Price,
+		Stock:       int32(product.Stock),
+	}
+	return &pb.CreateProductResponse{
+		Product: responseProduct,
+		Message: "Product created successfully",
+	}, nil
 }
 
-func (h *ProductHandler) DeleteProduct(c *gin.Context) {
-	id := c.PostForm("id")
-
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
-		return
+func (s *InventoryServiceServer) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.GetProductResponse, error) {
+	log.Printf("GetProduct request: %+v", req)
+	product, err := s.usecase.GetProductByID(ctx, req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
-	id = strings.TrimSpace(id)
+	responseProduct := &pb.Product{
+		Id:          product.ID,
+		Name:        product.Name,
+		Category:    product.Category,
+		Description: product.Description,
+		Price:       product.Price,
+		Stock:       int32(product.Stock),
+	}
+	return &pb.GetProductResponse{
+		Product: responseProduct,
+	}, nil
+}
 
-	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+func (s *InventoryServiceServer) ListProducts(ctx context.Context, req *pb.ListProductsRequest) (*pb.ListProductsResponse, error) {
+	log.Printf("ListProducts request: %+v", req)
+	products, err := s.usecase.ListProducts(ctx, req.Skip, req.Limit)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	var responseProducts []*pb.Product
+	for _, product := range products {
+		responseProducts = append(responseProducts, &pb.Product{
+			Id:          product.ID,
+			Name:        product.Name,
+			Category:    product.Category,
+			Description: product.Description,
+			Price:       product.Price,
+			Stock:       int32(product.Stock),
+		})
+	}
+	return &pb.ListProductsResponse{
+		Products: responseProducts,
+	}, nil
+}
+
+func (s *InventoryServiceServer) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.UpdateProductResponse, error) {
+	log.Printf("UpdateProduct request: %+v", req)
+	product := entity.Product{
+		ID:          req.Product.Id,
+		Name:        req.Product.Name,
+		Category:    req.Product.Category,
+		Description: req.Product.Description,
+		Price:       req.Product.Price,
+		Stock:       int(req.Product.Stock),
 	}
 
-	if err := h.usecase.DeleteProduct(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	err := s.usecase.UpdateProduct(ctx, &product)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	c.Redirect(http.StatusFound, "/products/store")
+	responseProduct := &pb.Product{
+		Id:          product.ID,
+		Name:        product.Name,
+		Category:    product.Category,
+		Description: product.Description,
+		Price:       product.Price,
+		Stock:       int32(product.Stock),
+	}
+	return &pb.UpdateProductResponse{
+		Product: responseProduct,
+		Message: "Product updated successfully",
+	}, nil
+}
+
+func (s *InventoryServiceServer) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*pb.DeleteProductResponse, error) {
+	log.Printf("DeleteProduct request: %+v", req)
+	err := s.usecase.DeleteProduct(ctx, req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &pb.DeleteProductResponse{
+		Message: "Product deleted successfully",
+	}, nil
 }

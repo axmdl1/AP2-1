@@ -18,13 +18,13 @@ func main() {
 	useCase := usecase.NewUserUsecase(userRepo)
 	userHandler := handler.NewUserServiceServer(useCase)
 
-	lis, err := net.Listen("tcp", ":1004")
+	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
 	userservice.RegisterUserServiceServer(grpcServer, userHandler)
-	log.Println("Server started on port 1004")
+	log.Println("Server started on port 50051")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

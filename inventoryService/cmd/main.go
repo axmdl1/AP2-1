@@ -1,28 +1,35 @@
 package main
 
 import (
+	"log"
+	"net"
+
 	"AP-1/inventoryService/internal/handler"
 	"AP-1/inventoryService/internal/repository"
-	"AP-1/inventoryService/internal/routes"
 	"AP-1/inventoryService/internal/usecase"
 	"AP-1/inventoryService/pkg/mongo"
-	"github.com/gin-gonic/gin"
+	pb "AP-1/pb/inventoryService"
+
+	"google.golang.org/grpc"
 )
 
 func main() {
-	database := mongo.ConnectMongoDB("mongodb://localhost:27017/inventoryDB", "inventoryDB")
+	db := mongo.ConnectMongoDB("mongodb://localhost:27017", "inventoryServiceDB")
 
-	//init
-	productRepo := repository.NewProductRepository(database)
+	productRepo := repository.NewProductRepository(db)
 	productUsecase := usecase.NewProductUsecase(productRepo)
-	productHandler := handler.NewProductHandler(productUsecase)
+	inventoryServiceServer := handler.NewInventoryServiceServer(productUsecase)
 
-	//router
-	router := gin.Default()
-	routes.SetupRoutes(router, productHandler)
+	lis, err := net.Listen("tcp", ":50052")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
 
-	router.LoadHTMLGlob("inventoryService/ui/*")
-	router.Static("/ui", "./ui")
+	grpcServer := grpc.NewServer()
+	pb.RegisterInventoryServiceServer(grpcServer, inventoryServiceServer)
+	log.Println("Inventory Service gRPC server started on port :50052")
 
-	router.Run(":1001")
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }
