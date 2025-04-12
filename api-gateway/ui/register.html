@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Registration - Apple Shop</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; }
+        form input { width: 100%; padding: 10px; margin: 10px 0; }
+        form button { padding: 10px; background: #333; color: #fff; border: none; width: 100%; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Register</h1>
+    <form id="registerForm">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Register</button>
+    </form>
+</div>
+<script>
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const data = {
+            username: document.getElementById("username").value,
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value
+        };
+        try {
+            const res = await fetch("http://localhost:1004/users/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            alert("Registered! User ID: " + result.user_id);
+        } catch (err) {
+            alert("Registration failed: " + err.message);
+        }
+    });
+</script>
+</body>
+</html>
