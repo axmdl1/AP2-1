@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	db := mongo.ConnectMongoDB("mongodb://localhost:27017", "inventoryServiceDB")
+	db := mongo.ConnectMongoDB("mongodb://localhost:27017/inventoryDB", "inventoryDB")
 
 	productRepo := repository.NewProductRepository(db)
 	productUsecase := usecase.NewProductUsecase(productRepo)

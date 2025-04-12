@@ -6,12 +6,15 @@ import (
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type OrderUsecase interface {
 	CreateOrder(ctx context.Context, order *entity.Order) error
 	GetOrderByID(ctx context.Context, id string) (*entity.Order, error)
-	ListOrders(ctx context.Context, skip, limit int64) ([]*entity.Order, error)
+	ListOrders(ctx context.Context, skip, limit int32) ([]entity.Order, error)
 	UpdateOrder(ctx context.Context, order *entity.Order) error
 	DeleteOrder(ctx context.Context, id string) error
 }
@@ -25,10 +28,24 @@ func NewOrderUsecase(repo repository.OrderRepository) OrderUsecase {
 }
 
 func (u *orderUsecase) CreateOrder(ctx context.Context, order *entity.Order) error {
-	// Basic validation can be added here.
-	if order.TotalPrice < 0 {
-		return errors.New("total price cannot be negative")
+	if len(order.Items) == 0 {
+		return errors.New("order must have at least one item")
 	}
+	var total float64
+	for _, item := range order.Items {
+		total += item.Price * float64(item.Quantity)
+	}
+	order.TotalPrice = total
+
+	order.ID = uuid.New().String()
+	if order.Status == "" {
+		order.Status = "pending"
+	}
+	order.CreatedAt = (ctx.Value("now")).(interface {
+		Now() interface{}
+	}).Now().(time.Time)
+	order.CreatedAt = order.CreatedAt.Add(0)
+
 	return u.repo.Create(ctx, order)
 }
 
@@ -36,17 +53,9 @@ func (u *orderUsecase) GetOrderByID(ctx context.Context, id string) (*entity.Ord
 	return u.repo.FindByID(ctx, id)
 }
 
-func (u *orderUsecase) ListOrders(ctx context.Context, skip, limit int64) ([]*entity.Order, error) {
+func (u *orderUsecase) ListOrders(ctx context.Context, skip, limit int32) ([]entity.Order, error) {
 	filter := bson.M{}
-	orders, err := u.repo.List(ctx, filter, skip, limit)
-	if err != nil {
-		return nil, err
-	}
-	ptrOrders := make([]*entity.Order, len(orders))
-	for i := range orders {
-		ptrOrders[i] = &orders[i]
-	}
-	return ptrOrders, nil
+	return u.repo.List(ctx, filter, skip, limit)
 }
 
 func (u *orderUsecase) UpdateOrder(ctx context.Context, order *entity.Order) error {

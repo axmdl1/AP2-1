@@ -1,112 +1,173 @@
 package handler
 
 import (
+	"context"
+	"log"
+
 	"AP-1/orderService/internal/entity"
 	"AP-1/orderService/internal/usecase"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"net/http"
+	pb "AP-1/pb/orderService"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"time"
 )
 
-type OrderHandler struct {
+type OrderServiceServer struct {
+	pb.UnimplementedOrderServiceServer
 	usecase usecase.OrderUsecase
 }
 
-func NewOrderHandler(u usecase.OrderUsecase) *OrderHandler {
-	return &OrderHandler{usecase: u}
+func NewOrderServiceServer(u usecase.OrderUsecase) *OrderServiceServer {
+	return &OrderServiceServer{usecase: u}
 }
 
-// CreateOrder handles POST /orders/create
-func (h *OrderHandler) CreateOrder(c *gin.Context) {
-	var order entity.Order
-	if err := c.ShouldBind(&order); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := h.usecase.CreateOrder(c.Request.Context(), &order); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusCreated, order)
-}
-
-// GetOrder handles GET /orders/:id
-func (h *OrderHandler) GetOrder(c *gin.Context) {
-	id := c.Param("id")
-	order, err := h.usecase.GetOrderByID(c.Request.Context(), id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "order not found"})
-		return
-	}
-	c.JSON(http.StatusOK, order)
-}
-
-func (h *OrderHandler) UpdateOrder(c *gin.Context) {
-	var form struct {
-		ID     string `form:"id" binding:"required"`
-		Status string `form:"status" binding:"required"`
-	}
-
-	if err := c.ShouldBind(&form); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	oid, err := primitive.ObjectIDFromHex(form.ID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order id"})
-		return
-	}
-
+func (s *OrderServiceServer) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
+	log.Printf("CreateOrder request: %+v", req)
 	order := entity.Order{
-		ID:     oid,
-		Status: form.Status,
+		UserID: req.Order.UserId,
+		Status: req.Order.Status,
+	}
+	for _, item := range req.Order.Items {
+		order.Items = append(order.Items, entity.OrderItem{
+			ProductID: item.ProductId,
+			Quantity:  int(item.Quantity),
+			Price:     item.Price,
+		})
 	}
 
-	if err := h.usecase.UpdateOrder(c.Request.Context(), &order); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	var total float64
+	for _, item := range order.Items {
+		total += item.Price * float64(item.Quantity)
+	}
+	order.TotalPrice = total
+	order.CreatedAt = time.Now()
+
+	if err := s.usecase.CreateOrder(ctx, &order); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	c.Redirect(http.StatusFound, "/orders")
+	resOrder := &pb.Order{
+		Id:         order.ID,
+		UserId:     order.UserID,
+		Status:     order.Status,
+		TotalPrice: order.TotalPrice,
+		CreatedAt:  order.CreatedAt.Format(time.RFC3339),
+	}
+	for _, item := range order.Items {
+		resOrder.Items = append(resOrder.Items, &pb.OrderItem{
+			ProductId: item.ProductID,
+			Quantity:  int32(item.Quantity),
+			Price:     item.Price,
+		})
+	}
+
+	return &pb.CreateOrderResponse{
+		Order:   resOrder,
+		Message: "Order created successfully",
+	}, nil
 }
 
-// ListOrders handles GET /orders
-func (h *OrderHandler) ListOrders(c *gin.Context) {
-	orders, err := h.usecase.ListOrders(c.Request.Context(), 0, 100)
+func (s *OrderServiceServer) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
+	log.Printf("GetOrder request: %+v", req)
+	order, err := s.usecase.GetOrderByID(ctx, req.Id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not list orders"})
-		return
+		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
-	c.HTML(http.StatusOK, "orders.html", gin.H{"orders": orders})
+	resOrder := &pb.Order{
+		Id:         order.ID,
+		UserId:     order.UserID,
+		Status:     order.Status,
+		TotalPrice: order.TotalPrice,
+		CreatedAt:  order.CreatedAt.Format(time.RFC3339),
+	}
+	for _, item := range order.Items {
+		resOrder.Items = append(resOrder.Items, &pb.OrderItem{
+			ProductId: item.ProductID,
+			Quantity:  int32(item.Quantity),
+			Price:     item.Price,
+		})
+	}
+	return &pb.GetOrderResponse{Order: resOrder}, nil
 }
 
-func (h *OrderHandler) GetEditOrderPage(c *gin.Context) {
-	id := c.Query("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "order id is required"})
-		return
-	}
-
-	order, err := h.usecase.GetOrderByID(c.Request.Context(), id)
+func (s *OrderServiceServer) ListOrders(ctx context.Context, req *pb.ListOrdersRequest) (*pb.ListOrdersResponse, error) {
+	log.Printf("ListOrders request: %+v", req)
+	orders, err := s.usecase.ListOrders(ctx, req.Skip, req.Limit)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "order not found"})
-		return
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-
-	c.HTML(http.StatusOK, "edit_order.html", gin.H{"order": order})
+	var resOrders []*pb.Order
+	for _, order := range orders {
+		resOrder := &pb.Order{
+			Id:         order.ID,
+			UserId:     order.UserID,
+			Status:     order.Status,
+			TotalPrice: order.TotalPrice,
+			CreatedAt:  order.CreatedAt.Format(time.RFC3339),
+		}
+		for _, item := range order.Items {
+			resOrder.Items = append(resOrder.Items, &pb.OrderItem{
+				ProductId: item.ProductID,
+				Quantity:  int32(item.Quantity),
+				Price:     item.Price,
+			})
+		}
+		resOrders = append(resOrders, resOrder)
+	}
+	return &pb.ListOrdersResponse{Orders: resOrders}, nil
 }
 
-func (h *OrderHandler) DeleteOrder(c *gin.Context) {
-	id := c.PostForm("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "order id is required"})
-		return
+func (s *OrderServiceServer) UpdateOrder(ctx context.Context, req *pb.UpdateOrderRequest) (*pb.UpdateOrderResponse, error) {
+	log.Printf("UpdateOrder request: %+v", req)
+	order := entity.Order{
+		ID:         req.Order.Id,
+		UserID:     req.Order.UserId,
+		Status:     req.Order.Status,
+		TotalPrice: req.Order.TotalPrice,
 	}
-	if err := h.usecase.DeleteOrder(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	for _, item := range req.Order.Items {
+		order.Items = append(order.Items, entity.OrderItem{
+			ProductID: item.ProductId,
+			Quantity:  int(item.Quantity),
+			Price:     item.Price,
+		})
 	}
-	c.Redirect(http.StatusFound, "/orders")
+	var total float64
+	for _, item := range order.Items {
+		total += item.Price * float64(item.Quantity)
+	}
+	order.TotalPrice = total
+
+	if err := s.usecase.UpdateOrder(ctx, &order); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	resOrder := &pb.Order{
+		Id:         order.ID,
+		UserId:     order.UserID,
+		Status:     order.Status,
+		TotalPrice: order.TotalPrice,
+		CreatedAt:  order.CreatedAt.Format(time.RFC3339),
+	}
+	for _, item := range order.Items {
+		resOrder.Items = append(resOrder.Items, &pb.OrderItem{
+			ProductId: item.ProductID,
+			Quantity:  int32(item.Quantity),
+			Price:     item.Price,
+		})
+	}
+
+	return &pb.UpdateOrderResponse{
+		Order:   resOrder,
+		Message: "Order updated successfully",
+	}, nil
+}
+
+func (s *OrderServiceServer) DeleteOrder(ctx context.Context, req *pb.DeleteOrderRequest) (*pb.DeleteOrderResponse, error) {
+	log.Printf("DeleteOrder request: %+v", req)
+	if err := s.usecase.DeleteOrder(ctx, req.Id); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &pb.DeleteOrderResponse{Message: "Order deleted successfully"}, nil
 }
