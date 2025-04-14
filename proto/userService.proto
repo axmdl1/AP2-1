@@ -22,7 +22,8 @@ message AuthenticateUserRequest {
 
 message AuthenticateUserResponse {
   string token = 1;
-  string message = 2;
+  string user_id = 2;
+  string message = 3;
 }
 
 message GetUserProfileRequest {

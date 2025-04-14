@@ -51,7 +51,7 @@ func RegisterUserRoutes(router *gin.Engine, client pb.UserServiceClient) {
 
 	router.GET("/users/profile", func(c *gin.Context) {
 		userID := c.Query("user_id")
-		if userID == "" {
+		if userID == "" || userID == "undefined" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
 			return
 		}

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>User Registration - Apple Shop</title>
     <style>
+        /* Simple CSS styling */
         body { font-family: Arial, sans-serif; background: #fafafa; padding: 20px; }
         .container { max-width: 400px; margin: auto; background: #fff; padding: 20px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: center; }
@@ -39,7 +40,12 @@
                 body: JSON.stringify(data)
             });
             const result = await res.json();
-            document.getElementById("message").textContent = "Registered! User ID: " + result.user_id;
+            if(result.user_id) {
+                // Redirect to profile page with user_id as query parameter.
+                window.location.href = "/profile?user_id=" + encodeURIComponent(result.user_id);
+            } else {
+                document.getElementById("message").textContent = "Registration success: " + JSON.stringify(result);
+            }
         } catch (err) {
             document.getElementById("message").textContent = "Registration failed: " + err.message;
         }

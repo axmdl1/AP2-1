@@ -62,7 +62,7 @@ func (u *userUsecase) AuthenticateUser(ctx context.Context, email, password stri
 	}
 
 	//TODO: implement token methods.
-	return "JWT-TOKEN", err
+	return user.ID, err
 }
 
 func (u *userUsecase) GetUserProfile(ctx context.Context, userID string) (*entity.UserProfile, error) {

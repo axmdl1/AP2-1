@@ -21,7 +21,7 @@
         <button type="submit">Login</button>
     </form>
     <p id="message"></p>
-    <a href="/users/register">Don't have an account? Register here.</a>
+    <a href="register.html">Don't have an account? Register here.</a>
 </div>
 <script>
     document.getElementById("loginForm").addEventListener("submit", async function(e) {
@@ -33,14 +33,14 @@
         try {
             const res = await fetch("http://localhost:1004/users/login", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             });
             const result = await res.json();
-            if (result.token) {
-                document.getElementById("message").textContent = "Login successful!";
-                // Save token or redirect as needed. For now, we can redirect to the profile page.
-                window.location.href = "/profile?user_id=" + encodeURIComponent(document.getElementById("email").value);
+            if(result.token) {
+                // For the sake of profile data, we'll assume the backend returns user_id along with token.
+                // If not, you'll need to call /users/profile with the email or token information.
+                window.location.href = "/profile?user_id=" + encodeURIComponent(result.user_id);
             } else {
                 document.getElementById("message").textContent = "Login failed: " + JSON.stringify(result);
             }

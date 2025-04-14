@@ -40,6 +40,7 @@ func (s *UserServiceServer) AuthenticateUser(ctx context.Context, req *userservi
 	}
 	return &userservice.AuthenticateUserResponse{
 		Token:   token,
+		UserId:  token,
 		Message: "User authenticated successfully",
 	}, nil
 }

@@ -8,7 +8,8 @@
         .container { max-width: 600px; margin: auto; background: #fff; padding: 20px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: center; }
         p { font-size: 1.1em; }
-        a { text-decoration: none; color: #333; display: inline-block; margin-top: 20px; padding: 10px 20px; background: #333; color: #fff; }
+        a { text-decoration: none; display: inline-block; margin-top: 20px; padding: 10px 20px;
+            background: #333; color: #fff; }
     </style>
 </head>
 <body>
@@ -19,7 +20,7 @@
 </div>
 <script>
     async function loadProfile() {
-        // For demonstration, assume user_id is passed as a URL parameter.
+        // Extract user_id from query parameters.
         const params = new URLSearchParams(window.location.search);
         const userID = params.get("user_id");
         if (!userID) {
@@ -30,7 +31,7 @@
             const res = await fetch("http://localhost:1004/users/profile?user_id=" + encodeURIComponent(userID));
             const profile = await res.json();
             document.getElementById("profile").innerHTML =
-                "<p>User ID: " + profile.user_id + "</p>" +
+                "<p>User ID: " + userID + "</p>" +
                 "<p>Username: " + profile.username + "</p>" +
                 "<p>Email: " + profile.email + "</p>";
         } catch (err) {
