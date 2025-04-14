@@ -24,9 +24,10 @@
             <th>Status</th>
             <th>Total Price</th>
             <th>Created At</th>
+            <th>Actions</th>
         </tr>
         </thead>
-        <tbody>
+        <tb.ody>
         {{range .orders}}
             <tr>
                 <td>{{.Id}}</td>
@@ -34,13 +35,20 @@
                 <td>{{.Status}}</td>
                 <td>{{printf "$%.2f" .TotalPrice}}</td>
                 <td>{{.CreatedAt}}</td>
+                <td class="action-buttons">
+                    <!-- Delete form using a method override; ensure your gateway supports this -->
+                    <form action="/orders/{{.Id}}" method="post" onsubmit="return confirm('Are you sure you want to delete this order?');">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
             </tr>
         {{else}}
             <tr>
                 <td colspan="5" style="text-align:center;">No orders available.</td>
             </tr>
         {{end}}
-        </tbody>
+        </tb.ody>
     </table>
     <a href="/products">Back to Store</a>
 </div>
