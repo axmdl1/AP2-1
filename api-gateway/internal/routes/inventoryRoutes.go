@@ -15,20 +15,39 @@ import (
 func RegisterInventoryRoutes(router *gin.Engine, client pb.InventoryServiceClient) {
 	// Create a Product
 	router.POST("/products", func(c *gin.Context) {
-		var req pb.CreateProductRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		// Parse form-encoded data
+		var req struct {
+			Name        string  `form:"name" binding:"required"`
+			Category    string  `form:"category" binding:"required"`
+			Description string  `form:"description" binding:"required"`
+			Price       float64 `form:"price" binding:"required"`
+			Stock       int     `form:"stock" binding:"required"`
+		}
+		if err := c.ShouldBind(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		// Build the gRPC request.
+		grpcReq := &pb.CreateProductRequest{
+			Product: &pb.Product{
+				Name:        req.Name,
+				Category:    req.Category,
+				Description: req.Description,
+				Price:       req.Price,
+				Stock:       int32(req.Stock),
+			},
+		}
+
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		res, err := client.CreateProduct(ctx, &req)
+		_, err := client.CreateProduct(ctx, grpcReq)
 		if err != nil {
 			log.Printf("CreateProduct error: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, res)
+		c.Redirect(http.StatusMovedPermanently, "/products")
 	})
 
 	// Get a Product by ID
@@ -61,7 +80,8 @@ func RegisterInventoryRoutes(router *gin.Engine, client pb.InventoryServiceClien
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, res)
+		//c.JSON(http.StatusOK, gin.H{"products": res.Products})
+		c.HTML(http.StatusOK, "store.html", gin.H{"products": res.Products})
 	})
 
 	// Update Product

@@ -2,70 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Panel - Apple Shop</title>
+    <title>Store - Apple Shop</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            padding: 20px;
-        }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #333;
-            color: #fff;
-            padding: 10px 20px;
-            margin-bottom: 20px;
-        }
-        header a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1, h2 {
-            text-align: center;
-        }
-        form {
-            margin-bottom: 20px;
-        }
-        form input, form textarea, form button {
-            padding: 10px;
-            margin: 5px 0;
-            font-size: 1em;
-            width: 100%;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background: #333;
-            color: #fff;
-        }
-        .action-buttons button {
-            padding: 5px 10px;
-            font-size: 0.9em;
-            margin-right: 5px;
-        }
+        /* Basic styling */
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; }
+        form { margin-bottom: 20px; }
+        form input, form textarea, form button { padding: 10px; margin: 5px 0; font-size: 1em; width: 100%; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid #ddd; }
+        th, td { padding: 10px; text-align: left; }
+        th { background: #333; color: #fff; }
+        .action-buttons button { padding: 5px 10px; font-size: 0.9em; margin-right: 5px; cursor: pointer; }
     </style>
     <script>
-        // Function to add product to cart using data attributes
+        // Function to add a product to cart (unchanged from previous version)
         function addToCart(buttonElem) {
             var productId = buttonElem.getAttribute("data-id");
             var price = buttonElem.getAttribute("data-price");
@@ -76,26 +28,26 @@
                 return;
             }
 
-            // Create form data to send with the POST request.
-            var formData = new FormData();
-            formData.append("product_id", productId);
-            formData.append("quantity", quantity);
-            formData.append("price", price);
+            const payload = {
+                item: {
+                    product_id: productId,
+                    quantity: parseInt(quantity),
+                    price: parseFloat(price)
+                }
+            };
 
-            // Send the POST request to Order Service on port 1003.
-            fetch("http://localhost:1003/orders/cart/add", {
+            fetch("http://localhost:1004/orders/cart/add", {
                 method: "POST",
-                body: formData
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
             })
                 .then(response => {
                     if (!response.ok) {
-                        return response.text().then(text => { throw new Error(text) });
+                        return response.text().then(text => { throw new Error(text); });
                     }
                     return response.json();
                 })
-                .then(data => {
-                    alert("Item added to cart: " + JSON.stringify(data));
-                })
+                .then(data => { alert("Item added to cart: " + JSON.stringify(data)); })
                 .catch(err => {
                     console.error("Error adding item to cart:", err);
                     alert("Error adding item to cart: " + err.message);
@@ -106,17 +58,17 @@
 <body>
 <header>
     <a href="#" class="logo">Admin Panel - Apple Shop</a>
-    <a href="/products/store" class="btn">Store</a>
-    <a href="http://localhost:1003/orders/cart" class="btn">View Cart</a>
+    <a href="/store" class="btn">Store</a>
+    <a href="http://localhost:1004/cart" class="btn">View Cart</a>
 </header>
-
 <div class="container">
     <h1>Product Management</h1>
 
-    <!-- Unified Form for Adding Products -->
+    <!-- Product Creation Form -->
     <h2 id="formTitle">Add New Product</h2>
-    <form id="productForm" action="/products/create" method="post">
-        <!-- Hidden field for product ID (empty when adding new product) -->
+    <!-- Note: We do NOT include "action" and "method" attributes here so that the form
+         submits as application/x-www-form-urlencoded by default -->
+    <form id="productForm" action="/products" method="post">
         <input type="text" id="productName" name="name" placeholder="Product Name" required>
         <input type="text" id="productCategory" name="category" placeholder="Category (e.g., iPhone, Mac)" required>
         <textarea id="productDescription" name="description" placeholder="Description" required></textarea>
@@ -125,7 +77,7 @@
         <button type="submit" id="formSubmitBtn">Add Product</button>
     </form>
 
-    <!-- Products Table -->
+    <!-- Products Table (assume loaded separately via JavaScript) -->
     <h2>Products</h2>
     <table>
         <thead>
@@ -140,28 +92,24 @@
         </thead>
         <tbody id="productTableBody">
         {{range .products}}
-        <tr>
-            <td>{{.Name}}</td>
-            <td>{{.Category}}</td>
-            <td>{{.Description}}</td>
-            <td>{{printf "$%.2f" .Price}}</td>
-            <td>{{.Stock}}</td>
-            <td class="action-buttons">
-                <a href="/products/edit?id={{.ID.Hex}}">Edit</a>
-                <button class="btn add-to-cart"
-                        data-id="{{.ID.Hex}}"
-                        data-price='{{printf "%.2f" .Price}}'
-                        onclick="addToCart(this)">Add to Cart</button>
-                <form action="/products/delete" method="post" style="display:inline;">
-                    <input type="hidden" name="id" value="{{.ID.Hex}}">
-                    <button type="submit" onclick="return confirm('Are you sure you want to delete this product?');">Delete</button>
-                </form>
-            </td>
-        </tr>
+            <tr>
+                <td>{{.Name}}</td>
+                <td>{{.Category}}</td>
+                <td>{{.Description}}</td>
+                <td>{{printf "$%.2f" .Price}}</td>
+                <td>{{.Stock}}</td>
+                <td class="action-buttons">
+                    <button class="btn add-to-cart" data-id="{{.Id}}" data-price='{{printf "%.2f" .Price}}' onclick="addToCart(this)">Add to Cart</button>
+                    <form action="/products/{{.Id}}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
         {{else}}
-        <tr>
-            <td colspan="6" style="text-align:center;">No products available.</td>
-        </tr>
+            <tr>
+                <td colspan="6" style="text-align:center;">No products available.</td>
+            </tr>
         {{end}}
         </tbody>
     </table>

@@ -24,15 +24,15 @@ func RegisterUIRoutes(router *gin.Engine) {
 	})
 
 	// User profile page.
-	router.GET("/profile", func(c *gin.Context) {
+	/*router.GET("/profile", func(c *gin.Context) {
 		// Optionally, you can pass profile data if needed.
 		c.HTML(http.StatusOK, "profile.html", nil)
-	})
+	})*/
 
 	// Store page for products.
-	router.GET("/store", func(c *gin.Context) {
+	/*router.GET("/store", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "store.html", nil)
-	})
+	})*/
 
 	// Cart page.
 	router.GET("/cart", func(c *gin.Context) {
