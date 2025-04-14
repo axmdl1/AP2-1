@@ -64,6 +64,14 @@ func RegisterUserRoutes(router *gin.Engine, client pb.UserServiceClient) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, res)
+		//c.JSON(http.StatusOK, res)
+
+		c.HTML(http.StatusOK, "profile.html", gin.H{
+			"profile": map[string]interface{}{
+				"user_id":  res.UserID,
+				"username": res.Username,
+				"email":    res.Email,
+			},
+		})
 	})
 }

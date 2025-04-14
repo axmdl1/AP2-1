@@ -40,7 +40,7 @@
             if(result.token) {
                 // For the sake of profile data, we'll assume the backend returns user_id along with token.
                 // If not, you'll need to call /users/profile with the email or token information.
-                window.location.href = "/profile?user_id=" + encodeURIComponent(result.user_id);
+                window.location.href = "/users/profile?user_id=" + encodeURIComponent(result.user_id);
             } else {
                 document.getElementById("message").textContent = "Login failed: " + JSON.stringify(result);
             }
