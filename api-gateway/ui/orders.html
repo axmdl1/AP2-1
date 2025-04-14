@@ -4,13 +4,105 @@
     <meta charset="UTF-8">
     <title>Orders - Apple Shop</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #fafafa; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        th { background: #333; color: #fff; }
-        a { display: inline-block; margin-top: 20px; text-decoration: none; background: #333; color: #fff; padding: 10px 20px; }
+        /* Global reset and body styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: #f7f7f7;
+            padding: 30px 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2em;
+            color: #444;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table thead {
+            background: #007bff;
+            color: #fff;
+        }
+        table thead th {
+            padding: 12px 15px;
+            text-align: left;
+        }
+        table tbody tr {
+            border-bottom: 1px solid #ddd;
+            transition: background 0.3s ease;
+        }
+        table tbody tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+        table tbody tr:hover {
+            background: #e9ecef;
+        }
+        table tbody td {
+            padding: 12px 15px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .action-buttons a {
+            padding: 8px 12px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: background 0.3s ease;
+            cursor: pointer;
+        }
+        .action-buttons form button {
+            padding: 8px 12px;
+            background: #ff0000;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: background 0.3s ease;
+            cursor: pointer;
+        }
+        .action-buttons a:hover,
+        .action-buttons form button:hover {
+            background: #0056b3;
+        }
+        .action-buttons form {
+            display: inline;
+        }
+        a.back-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 10px 20px;
+            background: #333;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+        a.back-link:hover {
+            background: #555;
+        }
     </style>
 </head>
 <body>
@@ -27,7 +119,7 @@
             <th>Actions</th>
         </tr>
         </thead>
-        <tb.ody>
+        <tbody>
         {{range .orders}}
             <tr>
                 <td>{{.Id}}</td>
@@ -37,7 +129,6 @@
                 <td>{{.CreatedAt}}</td>
                 <td class="action-buttons">
                     <a href="/orders/{{.Id}}">Edit Order</a>
-                    <!-- Delete form using a method override; ensure your gateway supports this -->
                     <form action="/orders/{{.Id}}" method="post" onsubmit="return confirm('Are you sure you want to delete this order?');">
                         <input type="hidden" name="_method" value="DELETE">
                         <button type="submit">Delete</button>
@@ -46,12 +137,12 @@
             </tr>
         {{else}}
             <tr>
-                <td colspan="5" style="text-align:center;">No orders available.</td>
+                <td colspan="6" style="text-align:center;">No orders available.</td>
             </tr>
         {{end}}
-        </tb.ody>
+        </tbody>
     </table>
-    <a href="/products">Back to Store</a>
+    <a href="/products" class="back-link">Back to Store</a>
 </div>
 </body>
 </html>

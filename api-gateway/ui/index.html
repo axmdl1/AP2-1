@@ -4,9 +4,50 @@
     <meta charset="UTF-8">
     <title>Apple Shop</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; text-align: center; }
-        .menu a { display: block; padding: 10px; margin: 10px; background: #333; color: #fff; text-decoration: none; }
+        /* Reset and global settings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f9f9f9, #ececec);
+            color: #333;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #444;
+        }
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .menu a {
+            padding: 15px;
+            background: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+        .menu a:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
