@@ -67,6 +67,7 @@ func RegisterOrderRoutes(router *gin.Engine, client pb.OrderServiceClient) {
 
 	// Update Order
 	router.POST("/orders/edit", func(c *gin.Context) {
+		// Bind only the new status and order id from the form.
 		var req struct {
 			ID     string `form:"id" binding:"required"`
 			Status string `form:"status" binding:"required"`
@@ -76,20 +77,36 @@ func RegisterOrderRoutes(router *gin.Engine, client pb.OrderServiceClient) {
 			return
 		}
 
-		grpcReq := &pb.UpdateOrderRequest{
-			Order: &pb.Order{
-				Id:     req.ID,
-				Status: req.Status,
-			},
-		}
+		// Fetch the existing order details using the gRPC GetOrder method.
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_, err := client.UpdateOrder(ctx, grpcReq)
+		existingRes, err := client.GetOrder(ctx, &pb.GetOrderRequest{Id: req.ID})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve existing order: " + err.Error()})
+			return
+		}
+
+		updatedOrder := &pb.Order{
+			Id:         existingRes.Order.Id,
+			UserId:     existingRes.Order.UserId,
+			Items:      existingRes.Order.Items,
+			TotalPrice: existingRes.Order.TotalPrice,
+			CreatedAt:  existingRes.Order.CreatedAt,
+			Status:     req.Status,
+		}
+
+		grpcReq := &pb.UpdateOrderRequest{
+			Order: updatedOrder,
+		}
+
+		ctx2, cancel2 := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel2()
+		_, err = client.UpdateOrder(ctx2, grpcReq)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		// On success, redirect to orders page.
+
 		c.Redirect(http.StatusMovedPermanently, "/orders")
 	})
 
