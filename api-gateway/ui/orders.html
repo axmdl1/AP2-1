@@ -5,8 +5,7 @@
     <title>Orders - Apple Shop</title>
     <style>
         body { font-family: Arial, sans-serif; background: #fafafa; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         h2 { text-align: center; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
@@ -17,7 +16,7 @@
 <body>
 <div class="container">
     <h2>Your Orders</h2>
-    <table id="ordersTable">
+    <table>
         <thead>
         <tr>
             <th>Order ID</th>
@@ -27,33 +26,23 @@
             <th>Created At</th>
         </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+        {{range .orders}}
+            <tr>
+                <td>{{.Id}}</td>
+                <td>{{.UserId}}</td>
+                <td>{{.Status}}</td>
+                <td>{{printf "$%.2f" .TotalPrice}}</td>
+                <td>{{.CreatedAt}}</td>
+            </tr>
+        {{else}}
+            <tr>
+                <td colspan="5" style="text-align:center;">No orders available.</td>
+            </tr>
+        {{end}}
+        </tbody>
     </table>
     <a href="/products">Back to Store</a>
 </div>
-<script>
-    async function loadOrders() {
-        try {
-            const res = await fetch("http://localhost:1004/orders");
-            const data = await res.json();
-            const tbody = document.querySelector("#ordersTable tbody");
-            tbody.innerHTML = "";
-            data.orders.forEach(order => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-          <td>${order.id}</td>
-          <td>${order.user_id}</td>
-          <td>${order.status}</td>
-          <td>$${order.total_price.toFixed(2)}</td>
-          <td>${order.created_at}</td>
-        `;
-                tbody.appendChild(tr);
-            });
-        } catch (err) {
-            console.error("Failed to load orders:", err);
-        }
-    }
-    window.onload = loadOrders;
-</script>
 </body>
 </html>

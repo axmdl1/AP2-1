@@ -61,8 +61,8 @@ func RegisterOrderRoutes(router *gin.Engine, client pb.OrderServiceClient) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		//c.JSON(http.StatusOK, res)
-		c.HTML(http.StatusOK, "orders.html", gin.H{"orders": res})
+		//c.JSON(http.StatusOK, res.Orders)
+		c.HTML(http.StatusOK, "orders.html", gin.H{"orders": res.Orders})
 	})
 
 	// Update Order

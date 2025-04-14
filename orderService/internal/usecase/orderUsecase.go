@@ -41,10 +41,7 @@ func (u *orderUsecase) CreateOrder(ctx context.Context, order *entity.Order) err
 	if order.Status == "" {
 		order.Status = "pending"
 	}
-	order.CreatedAt = (ctx.Value("now")).(interface {
-		Now() interface{}
-	}).Now().(time.Time)
-	order.CreatedAt = order.CreatedAt.Add(0)
+	order.CreatedAt = time.Now()
 
 	return u.repo.Create(ctx, order)
 }
