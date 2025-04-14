@@ -60,7 +60,8 @@ func RegisterInventoryRoutes(router *gin.Engine, client pb.InventoryServiceClien
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, res)
+		//c.JSON(http.StatusOK, res.Product)
+		c.HTML(http.StatusOK, "edit.html", gin.H{"product": res.Product})
 	})
 
 	// List Products with pagination
@@ -84,20 +85,34 @@ func RegisterInventoryRoutes(router *gin.Engine, client pb.InventoryServiceClien
 		c.HTML(http.StatusOK, "store.html", gin.H{"products": res.Products})
 	})
 
-	// Update Product
-	router.PUT("/products/:id", func(c *gin.Context) {
+	router.POST("/products/edit/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		var req pb.UpdateProductRequest
+		var req struct {
+			Name        string  `json:"name" binding:"required"`
+			Category    string  `json:"category" binding:"required"`
+			Description string  `json:"description" binding:"required"`
+			Price       float64 `json:"price" binding:"required"`
+			Stock       int     `json:"stock" binding:"required"`
+		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		// Ensure the product id in request matches the URL.
-		req.Product.Id = id
+		grpcReq := &pb.UpdateProductRequest{
+			Product: &pb.Product{
+				Id:          id,
+				Name:        req.Name,
+				Category:    req.Category,
+				Description: req.Description,
+				Price:       req.Price,
+				Stock:       int32(req.Stock),
+			},
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		res, err := client.UpdateProduct(ctx, &req)
+		res, err := client.UpdateProduct(ctx, grpcReq)
 		if err != nil {
+			log.Printf("UpdateProduct error: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
