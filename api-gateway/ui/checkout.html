@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout - Apple Shop</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #fafafa; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: #fff; padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; }
+        button { width: 100%; padding: 10px; background: #333; color: #fff; border: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Payment Details</h2>
+    <form id="checkoutForm">
+        <input type="text" id="cardNumber" placeholder="Card Number" required>
+        <input type="text" id="expiry" placeholder="Expiry Date (MM/YY)" required>
+        <input type="text" id="cvv" placeholder="CVV" required>
+        <button type="submit">Pay Now</button>
+    </form>
+    <p id="message"></p>
+    <a href="cart.html">Back to Cart</a>
+</div>
+<script>
+    document.getElementById("checkoutForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const data = {
+            card_number: document.getElementById("cardNumber").value,
+            expiry: document.getElementById("expiry").value,
+            cvv: document.getElementById("cvv").value
+        };
+        try {
+            const res = await fetch("http://localhost:1004/orders/checkout", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            alert("Order placed successfully! Order ID: " + result.order_id + " Total: $" + result.total_price);
+            window.location.href = "/orders";
+        } catch (err) {
+            document.getElementById("message").textContent = "Checkout failed: " + err.message;
+        }
+    });
+</script>
+</body>
+</html>

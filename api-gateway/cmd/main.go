@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	// Dial the User Service (gRPC)
+	// Dial gRPC services.
 	userConn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("failed to connect to User Service: %v", err)
@@ -24,7 +24,6 @@ func main() {
 	defer userConn.Close()
 	userClient := pbUser.NewUserServiceClient(userConn)
 
-	// Dial the Inventory Service (gRPC)
 	invConn, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("failed to connect to Inventory Service: %v", err)
@@ -32,7 +31,6 @@ func main() {
 	defer invConn.Close()
 	invClient := pbInventory.NewInventoryServiceClient(invConn)
 
-	// Dial the Order Service (gRPC)
 	orderConn, err := grpc.Dial("localhost:50053", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("failed to connect to Order Service: %v", err)
@@ -40,32 +38,31 @@ func main() {
 	defer orderConn.Close()
 	orderClient := pbOrder.NewOrderServiceClient(orderConn)
 
-	// Initialize the Gin router.
+	// Initialize Gin router.
 	router := gin.Default()
 
-	// Set up CORS for allowing our frontend (adjust origin as needed)
+	// Set up CORS (allow requests from your frontend origin).
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:1001"},
-		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// Serve UI (HTML pages) from the ui folder.
-	router.Static("/ui", "./apiGateway/ui")
-	// Optionally, if you want to serve a default landing page:
-	router.GET("/", func(c *gin.Context) {
-		c.File("./apiGateway/ui/index.html")
-	})
+	// Load HTML templates from ui directory.
+	// Adjust the path based on your directory structure.
+	router.LoadHTMLGlob("api-gateway/ui/*")
 
-	// Set up API routes for each microservice.
-	// These route functions are defined in separate files under internal/routes.
+	// Register REST endpoints for each microservice.
+	// (Assume you have similar route registration files for users, inventory, orders.)
 	routes.RegisterUserRoutes(router, userClient)
 	routes.RegisterInventoryRoutes(router, invClient)
 	routes.RegisterOrderRoutes(router, orderClient)
 
-	// Start API Gateway on port 1004.
+	// Register frontend UI routes.
+	routes.RegisterUIRoutes(router)
+
 	log.Println("API Gateway starting on port 1004...")
 	if err := router.Run(":1004"); err != nil {
 		log.Fatalf("failed to run server: %v", err)

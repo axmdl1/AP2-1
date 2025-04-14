@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile - Apple Shop</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #fafafa; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: #fff; padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: center; }
+        p { font-size: 1.1em; }
+        a { text-decoration: none; color: #333; display: inline-block; margin-top: 20px; padding: 10px 20px; background: #333; color: #fff; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>User Profile</h2>
+    <div id="profile"></div>
+    <a href="/">Back to Home</a>
+</div>
+<script>
+    async function loadProfile() {
+        // For demonstration, assume user_id is passed as a URL parameter.
+        const params = new URLSearchParams(window.location.search);
+        const userID = params.get("user_id");
+        if (!userID) {
+            document.getElementById("profile").textContent = "No user ID provided.";
+            return;
+        }
+        try {
+            const res = await fetch("http://localhost:1004/users/profile?user_id=" + encodeURIComponent(userID));
+            const profile = await res.json();
+            document.getElementById("profile").innerHTML =
+                "<p>User ID: " + profile.user_id + "</p>" +
+                "<p>Username: " + profile.username + "</p>" +
+                "<p>Email: " + profile.email + "</p>";
+        } catch (err) {
+            document.getElementById("profile").textContent = "Failed to load profile: " + err.message;
+        }
+    }
+    window.onload = loadProfile;
+</script>
+</body>
+</html>

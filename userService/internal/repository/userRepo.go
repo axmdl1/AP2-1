@@ -3,6 +3,7 @@ package repository
 import (
 	"AP-1/userService/internal/entity"
 	"context"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -24,7 +25,7 @@ func NewUserRepository(db *mongo.Database) UserRepository {
 
 func (u userRepositoryMongo) Create(ctx context.Context, user *entity.User) error {
 	if user.ID == "" {
-		user.ID = "generated uuid" //TODO: uuid system.
+		user.ID = uuid.New().String()
 	}
 
 	_, err := u.collection.InsertOne(ctx, user)

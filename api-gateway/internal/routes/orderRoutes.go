@@ -61,7 +61,8 @@ func RegisterOrderRoutes(router *gin.Engine, client pb.OrderServiceClient) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, res)
+		//c.JSON(http.StatusOK, res)
+		c.HTML(http.StatusOK, "orders.html", gin.H{"orders": res})
 	})
 
 	// Update Order
@@ -138,7 +139,8 @@ func RegisterOrderRoutes(router *gin.Engine, client pb.OrderServiceClient) {
 			return
 		}
 		// Returning JSON for front-end to render payment page.
-		c.JSON(http.StatusOK, gin.H{"total": res.Total})
+		//c.JSON(http.StatusOK, gin.H{"total": res.Total})
+		c.HTML(http.StatusOK, "checkout.html", gin.H{"total": res.Total})
 	})
 
 	// Process checkout (payment)
