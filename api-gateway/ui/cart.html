@@ -61,7 +61,7 @@
     async function checkout() {
         try {
             // Redirect user to a simple payment page (checkout.html) that collects payment details.
-            window.location.href = "checkout.html";
+            window.location.href = "/orders/checkout";
         } catch (err) {
             alert("Checkout failed: " + err.message);
         }

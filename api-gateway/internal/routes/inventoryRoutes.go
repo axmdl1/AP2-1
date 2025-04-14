@@ -105,15 +105,15 @@ func RegisterInventoryRoutes(router *gin.Engine, client pb.InventoryServiceClien
 	})
 
 	// Delete Product
-	router.DELETE("/products/:id", func(c *gin.Context) {
+	router.POST("/products/:id", func(c *gin.Context) {
 		id := c.Param("id")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		res, err := client.DeleteProduct(ctx, &pb.DeleteProductRequest{Id: id})
+		_, err := client.DeleteProduct(ctx, &pb.DeleteProductRequest{Id: id})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, res)
+		c.Redirect(http.StatusMovedPermanently, "/products")
 	})
 }
