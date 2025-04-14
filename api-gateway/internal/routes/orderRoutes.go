@@ -41,7 +41,7 @@ func RegisterOrderRoutes(router *gin.Engine, client pb.OrderServiceClient) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, res)
+		c.HTML(http.StatusOK, "edit_order.html", gin.H{"order": res.Order})
 	})
 
 	// List Orders (with pagination)
@@ -66,22 +66,31 @@ func RegisterOrderRoutes(router *gin.Engine, client pb.OrderServiceClient) {
 	})
 
 	// Update Order
-	router.PUT("/orders/:id", func(c *gin.Context) {
-		id := c.Param("id")
-		var req pb.UpdateOrderRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+	router.POST("/orders/edit", func(c *gin.Context) {
+		var req struct {
+			ID     string `form:"id" binding:"required"`
+			Status string `form:"status" binding:"required"`
+		}
+		if err := c.ShouldBind(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		req.Order.Id = id
+
+		grpcReq := &pb.UpdateOrderRequest{
+			Order: &pb.Order{
+				Id:     req.ID,
+				Status: req.Status,
+			},
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		res, err := client.UpdateOrder(ctx, &req)
+		_, err := client.UpdateOrder(ctx, grpcReq)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, res)
+		// On success, redirect to orders page.
+		c.Redirect(http.StatusMovedPermanently, "/orders")
 	})
 
 	// Delete Order

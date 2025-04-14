@@ -36,6 +36,7 @@
                 <td>{{printf "$%.2f" .TotalPrice}}</td>
                 <td>{{.CreatedAt}}</td>
                 <td class="action-buttons">
+                    <a href="/orders/{{.Id}}">Edit Order</a>
                     <!-- Delete form using a method override; ensure your gateway supports this -->
                     <form action="/orders/{{.Id}}" method="post" onsubmit="return confirm('Are you sure you want to delete this order?');">
                         <input type="hidden" name="_method" value="DELETE">

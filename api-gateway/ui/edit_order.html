@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Order - Apple Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #fafafa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        form label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select, form button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        form button {
+            background: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Edit Order</h1>
+    <!-- Display some order info (read-only) -->
+    <p><strong>Order ID:</strong> {{.order.Id}}</p>
+    <p><strong>User ID:</strong> {{.order.UserId}}</p>
+    <p><strong>Total Price:</strong> {{printf "$%.2f" .order.TotalPrice}}</p>
+    <!-- Form for updating order status -->
+    <form action="/orders/edit" method="POST">
+        <!-- Hidden field with the order ID -->
+        <input type="hidden" name="id" value="{{.order.Id}}">
+        <label for="status">Order Status:</label>
+        <select id="status" name="status" required>
+            <option value="pending" {{if eq .order.Status "pending"}}selected{{end}}>Pending</option>
+            <option value="completed" {{if eq .order.Status "completed"}}selected{{end}}>Completed</option>
+            <option value="cancelled" {{if eq .order.Status "cancelled"}}selected{{end}}>Cancelled</option>
+        </select>
+        <button type="submit">Update Order</button>
+    </form>
+    <a href="/orders">Back to Orders</a>
+</div>
+</body>
+</html>
