@@ -58,7 +58,7 @@
     <!-- This form submits to your UpdateProduct handler -->
     <form action="/products/edit" method="POST">
         <!-- Hidden field with the product ID -->
-        <input type="hidden" name="id" value="{{.ID}}">
+        <input type="hidden" name="id" value="{{.product.Id}}" required>
 
         <label for="name">Product Name:</label>
         <input type="text" id="name" name="name" value="{{.product.Name}}" required>

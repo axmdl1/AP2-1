@@ -60,7 +60,7 @@ func RegisterInventoryRoutes(router *gin.Engine, client pb.InventoryServiceClien
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		//c.JSON(http.StatusOK, res.Product)
+		//c.JSON(http.StatusOK, res)
 		c.HTML(http.StatusOK, "edit.html", gin.H{"product": res.Product})
 	})
 
@@ -85,22 +85,22 @@ func RegisterInventoryRoutes(router *gin.Engine, client pb.InventoryServiceClien
 		c.HTML(http.StatusOK, "store.html", gin.H{"products": res.Products})
 	})
 
-	router.POST("/products/edit/:id", func(c *gin.Context) {
-		id := c.Param("id")
+	router.POST("/products/edit", func(c *gin.Context) {
 		var req struct {
-			Name        string  `json:"name" binding:"required"`
-			Category    string  `json:"category" binding:"required"`
-			Description string  `json:"description" binding:"required"`
-			Price       float64 `json:"price" binding:"required"`
-			Stock       int     `json:"stock" binding:"required"`
+			ID          string  `form:"id" binding:"required"`
+			Name        string  `form:"name" binding:"required"`
+			Category    string  `form:"category" binding:"required"`
+			Description string  `form:"description" binding:"required"`
+			Price       float64 `form:"price" binding:"required"`
+			Stock       int     `form:"stock" binding:"required"`
 		}
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := c.ShouldBind(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		grpcReq := &pb.UpdateProductRequest{
 			Product: &pb.Product{
-				Id:          id,
+				Id:          req.ID,
 				Name:        req.Name,
 				Category:    req.Category,
 				Description: req.Description,
@@ -110,13 +110,12 @@ func RegisterInventoryRoutes(router *gin.Engine, client pb.InventoryServiceClien
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		res, err := client.UpdateProduct(ctx, grpcReq)
+		_, err := client.UpdateProduct(ctx, grpcReq)
 		if err != nil {
-			log.Printf("UpdateProduct error: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, res)
+		c.Redirect(http.StatusMovedPermanently, "/products")
 	})
 
 	// Delete Product
